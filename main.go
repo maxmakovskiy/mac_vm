@@ -22,6 +22,7 @@ var (
 	}
 	// pc - program counter or instruction pointer
 	pc int = 0
+	// running - flag that allows us to automate fetch cycle
 	running bool = true
 )
 
@@ -30,14 +31,19 @@ func fetch() int {
 	return program[pc]
 }
 
+// eval - evaluates the given instruction
+func eval(instr int) {
+	switch instr {
+	case HLT:
+		running = false
+	default:
+		fmt.Println(instr)
+	}
+}
+
 func main() {
 	for running {
-		x := fetch()
-		if x == HLT {
-			running = false
-		} else {
-			fmt.Println(x)
-			pc++
-		}
+		eval(fetch())
+		pc++
 	}
 }
