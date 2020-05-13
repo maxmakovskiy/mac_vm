@@ -2,8 +2,10 @@ package main
 
 import "fmt"
 
+// instruction set of this virtual machine
+// opcodes begins since 0
 const (
-	PSH = iota + 1
+	PSH = iota
 	ADD
 	POP
 	SET
@@ -18,8 +20,24 @@ var (
 		POP,
 		HLT,
 	}
+	// pc - program counter or instruction pointer
+	pc int = 0
+	running bool = true
 )
 
+// fetch - returns current instruction from program
+func fetch() int {
+	return program[pc]
+}
+
 func main() {
-	fmt.Println("Hello vm!")
+	for running {
+		x := fetch()
+		if x == HLT {
+			running = false
+		} else {
+			fmt.Println(x)
+			pc++
+		}
+	}
 }
