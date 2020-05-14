@@ -12,6 +12,16 @@ const (
 	HLT
 )
 
+const (
+	A = iota
+	B
+	C
+	D
+	E
+	F
+	NumOfRegisters
+)
+
 var (
 	program []int = []int{
 		PSH, 5,
@@ -27,6 +37,7 @@ var (
 	// sp - stack pointer
 	sp int = -1
 	stack [256]int
+	registers [NumOfRegisters]int
 )
 
 // fetch - returns current instruction from program
