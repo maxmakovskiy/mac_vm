@@ -10,6 +10,7 @@ const (
 	POP
 	SET
 	HLT
+	MUL
 )
 
 const (
@@ -29,6 +30,10 @@ var (
 		PSH, 5,
 		PSH, 6,
 		ADD,
+		POP,
+		PSH, 1,
+		PSH, 2,
+		MUL,
 		POP,
 		HLT,
 	}
@@ -81,6 +86,11 @@ func eval(instr int) {
 		// sp++ incrementing sp for push result of arg1+arg2
 		// but (sp--) + (sp++) = 0 and we just stay it out
 		stack[sp] = arg1 + arg2
+	case MUL:
+		arg1 := stack[sp]
+		sp--
+		arg2 := stack[sp]
+		stack[sp] = arg1 * arg2
 	}
 }
 
