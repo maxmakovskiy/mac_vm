@@ -20,6 +20,7 @@ const (
 	MUL
 	DIV
 	SUB
+	MOV
 )
 
 const (
@@ -108,6 +109,10 @@ func eval(instr Token) {
 		sp--
 		arg2 := stack[sp]
 		stack[sp] = arg1 - arg2
+	case MOV:
+		reg1 := instr.args[0]
+		reg2 := instr.args[1]
+		registers[reg1] = registers[reg2]
 	}
 }
 
@@ -127,6 +132,8 @@ func recognizeInstr(instr string) int {
 		return DIV
 	case "SUB":
 		return SUB
+	case "MOV":
+		return MOV
 	default:
 		return HLT
 	}
