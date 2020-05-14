@@ -19,6 +19,8 @@ const (
 	D
 	E
 	F
+	PC
+	SP
 	NumOfRegisters
 )
 
@@ -30,15 +32,19 @@ var (
 		POP,
 		HLT,
 	}
-	// pc - program counter or instruction pointer
-	pc int = 0
+
 	// running - flag that allows us to automate fetch cycle
 	running bool = true
-	// sp - stack pointer
-	sp int = -1
+
 	stack [256]int
 	registers [NumOfRegisters]int
+
+	// sp - stack pointer
+	sp = registers[SP]
+	// pc - program counter or instruction pointer
+	pc = registers[PC]
 )
+
 
 // fetch - returns current instruction from program
 func fetch() int {
@@ -79,6 +85,12 @@ func eval(instr int) {
 }
 
 func main() {
+	// explicit assigning default values:
+	// registers[SP] = -1 'cause execution stack is empty
+	// registers[PC] = 0 'case execution of program begins from 0 address
+	registers[SP] = -1
+	registers[PC] = 0
+
 	for running {
 		eval(fetch())
 		pc++
