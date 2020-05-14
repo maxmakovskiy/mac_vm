@@ -18,6 +18,8 @@ const (
 	JMP
 	HLT
 	MUL
+	DIV
+	SUB
 )
 
 const (
@@ -96,6 +98,16 @@ func eval(instr Token) {
 	case JMP:
 		isJump = true
 		pc = instr.args[0]
+	case DIV:
+		arg1 := stack[sp]
+		sp--
+		arg2 := stack[sp]
+		stack[sp] = arg1 / arg2
+	case SUB:
+		arg1 := stack[sp]
+		sp--
+		arg2 := stack[sp]
+		stack[sp] = arg1 - arg2
 	}
 }
 
@@ -111,8 +123,10 @@ func recognizeInstr(instr string) int {
 		return MUL
 	case "JMP":
 		return JMP
-	case "HLT":
-		return HLT
+	case "DIV":
+		return DIV
+	case "SUB":
+		return SUB
 	default:
 		return HLT
 	}
