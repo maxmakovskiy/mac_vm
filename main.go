@@ -203,6 +203,21 @@ func readFile(fileName string) []string {
 	return result
 }
 
+func help() {
+	fmt.Printf("The commands are: \n")
+	fmt.Printf("PSH - pushes value to the stack\n")
+	fmt.Printf("POP - pops value from the stack\n")
+	fmt.Printf("ADD - adds top two values on stack\n")
+	fmt.Printf("SUB - subtracts top two values on stack\n")
+	fmt.Printf("DIV - divides top tow values on stack\n")
+	fmt.Printf("MUL - multiplies top two values on stack\n")
+	fmt.Printf("MOV - move the value from one register to another\n")
+	fmt.Printf("JMP - jump to the passing address\n")
+	fmt.Printf("GLD - loads given register to the top of stack\n")
+	fmt.Printf("GPT - pushes top of the stack to given register\n")
+	fmt.Printf("HLT - halts program\n")
+}
+
 func registerDump() {
 	fmt.Printf("REGISTER DUMP:\n")
 	fmt.Printf("------------------------------------------\n")
@@ -262,6 +277,7 @@ func runPrompt() {
 			break
 		} else if cleanString == "help" {
 			fmt.Println("Hello! It's help :D How are you?")
+			help()
 		} else {
 			// run <input>
 			program = append(program, tokenizer([]string{cleanString})[0])
