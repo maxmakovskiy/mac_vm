@@ -22,6 +22,7 @@ const (
 	SUB
 	MOV
 	GLD
+	GPT
 )
 
 const (
@@ -118,6 +119,9 @@ func eval(instr Token) {
 		sp++
 		reg := instr.args[0]
 		stack[sp] = registers[reg]
+	case GPT:
+		reg := instr.args[0]
+		registers[reg] = stack[sp]
 	}
 }
 
@@ -141,6 +145,8 @@ func recognizeInstr(instr string) int {
 		return MOV
 	case "GLD":
 		return GLD
+	case "GPT":
+		return GPT
 	default:
 		return HLT
 	}
