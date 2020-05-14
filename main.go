@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -56,9 +57,9 @@ var (
 	registers [NumOfRegisters]int
 
 	// sp - stack pointer
-	sp = registers[SP]
+	sp = -1
 	// pc - program counter or instruction pointer
-	pc = registers[PC]
+	pc = 0
 )
 
 // fetch - returns current instruction from program
@@ -123,6 +124,8 @@ func eval(instr Token) {
 	case GPT:
 		reg := instr.args[0]
 		registers[reg] = stack[sp]
+	case -1:
+		return
 	}
 }
 
@@ -148,8 +151,10 @@ func recognizeInstr(instr string) int {
 		return GLD
 	case "GPT":
 		return GPT
-	default:
+	case "HTL":
 		return HLT
+	default:
+		return -1
 	}
 }
 
@@ -234,11 +239,17 @@ func registerDump() {
 func stackDump(depth int) {
 	fmt.Printf("STACK DUMP:\n")
 	fmt.Printf("------------------------------------------\n")
-	for i, k := range stack {
-		if (i+1) > depth {
-			break
+	if depth == -1 {
+		for _, k := range stack {
+			fmt.Printf(" -> %d\n", k)
 		}
-		fmt.Printf(" -> %d\n", k)
+	} else {
+		for i, k := range stack {
+			if (i+1) > depth {
+				break
+			}
+			fmt.Printf(" -> %d\n", k)
+		}
 	}
 	fmt.Printf("==========================================\n")
 }
@@ -278,13 +289,28 @@ func runPrompt() {
 		} else if cleanString == "help" {
 			fmt.Println("Hello! It's help :D How are you?")
 			help()
+		} else if cleanString == "registers" {
+			registerDump()
 		} else {
-			// run <input>
-			program = append(program, tokenizer([]string{cleanString})[0])
-			if running {
-				eval(fetch())
-				if !isJump {
-					pc++
+			matched, err := regexp.MatchString("stack -*[0-9]+", cleanString)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, err)
+			}
+			if matched {
+				num, err := strconv.Atoi(cleanString[6:])
+				if err != nil {
+					fmt.Fprintln(os.Stderr, err)
+				}
+
+				stackDump(num)
+			} else {
+				// run <input>
+				program = append(program, tokenizer([]string{cleanString})[0])
+				if running {
+					eval(fetch())
+					if !isJump {
+						pc++
+					}
 				}
 			}
 		}
@@ -292,12 +318,6 @@ func runPrompt() {
 }
 
 func main() {
-	// explicit assigning default values:
-	// registers[SP] = -1 'cause execution stack is empty
-	// registers[PC] = 0 'case execution of program begins from 0 address
-	registers[SP] = -1
-	registers[PC] = 0
-
 	var cmdArgs []string = os.Args[1:]
 	var argsLen int = len(cmdArgs)
 
