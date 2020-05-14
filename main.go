@@ -40,6 +40,7 @@ func eval(instr int) {
 	case HLT:
 		running = false
 	case PSH:
+		// incr sp 'cause we add new value to the top of the stack
 		sp++
 		// incr pc for give args of PSH instruction
 		pc++
@@ -51,6 +52,18 @@ func eval(instr int) {
 		// decrementing stack pointer
 		sp--
 		fmt.Printf("popped %d\n", tempVal)
+	case ADD:
+		// pop first value from the stack
+		// and decrementing stack pointer
+		arg1 := stack[sp]
+		sp--
+		// pop next value from the stack
+		arg2 := stack[sp]
+		// theoretically, we need to do
+		// sp-- decrementing sp after popped the second value from the stack
+		// sp++ incrementing sp for push result of arg1+arg2
+		// but (sp--) + (sp++) = 0 and we just stay it out
+		stack[sp] = arg1 + arg2
 	}
 }
 
