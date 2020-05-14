@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"os"
 	"strconv"
@@ -64,17 +65,13 @@ func fetch() int {
 }
 
 // eval - evaluates the given instruction
-func eval(instr int) {
-	switch instr {
+func eval(instr Token) {
+	switch instr.command {
 	case HLT:
 		running = false
 	case PSH:
-		// incr sp 'cause we add new value to the top of the stack
 		sp++
-		// incr pc for give args of PSH instruction
-		pc++
-		// push args to stack
-		stack[sp] = program[pc]
+		stack[sp] = instr.args[0]
 	case POP:
 		// tempVal - value that popped from top of the stack
 		tempVal := stack[sp]
@@ -99,13 +96,11 @@ func eval(instr int) {
 		arg2 := stack[sp]
 		stack[sp] = arg1 * arg2
 	case JMP:
-		pc++
-		pc = pc+1
-		pc++
+		pc = instr.args[0]
 	}
 }
 
-type Line struct {
+type Token struct {
 	command int
 	args []int
 }
@@ -129,32 +124,31 @@ func recognizeInstr(instr string) int {
 	}
 }
 
-func tokenizer(input []string) []Line {
-	result := make([]Line, len(input))
+func tokenizer(input []string) []Token {
+	result := make([]Token, len(input))
 
 	for i := range input {
 		temp := strings.Split(input[i], " ")
 
-		line := Line{}
+		token := Token{}
 
-		line.command = recognizeInstr(temp[0])
+		token.command = recognizeInstr(temp[0])
 
 		if len(temp) > 1 {
 			temp2 := temp[1:]
-			line.args = make([]int, len(temp2))
+			token.args = make([]int, len(temp2))
 
 			var err error
 			for i := range temp2 {
-				line.args[i], err = strconv.Atoi(temp2[i])
+				token.args[i], err = strconv.Atoi(temp2[i])
 				if err != nil {
 					fmt.Fprintln(os.Stderr, err)
 				}
 			}
 		}
 
-		result[i] = line
+		result[i] = token
 	}
-
 
 	return result
 }
@@ -181,19 +175,30 @@ func readFile(fileName string) []string {
 }
 
 func main() {
+	source := flag.String("file","","")
+
+	flag.Parse()
+	if *source == "" {
+		fmt.Fprintln(os.Stderr, "-flag=[file] required")
+		return
+	}
+
 	// explicit assigning default values:
 	// registers[SP] = -1 'cause execution stack is empty
 	// registers[PC] = 0 'case execution of program begins from 0 address
 	registers[SP] = -1
 	registers[PC] = 0
 
-	var programz []Line
-	programz = tokenizer(readFile("test.mac"))
-	fmt.Println(programz)
+	var tokens []Token
+	tokens = tokenizer(readFile(*source))
 
-
-	for running {
-		eval(fetch())
-		pc++
+	for _, v := range tokens {
+		if running {
+			eval(v)
+			pc++
+		} else {
+			break
+		}
 	}
+
 }
