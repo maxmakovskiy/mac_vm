@@ -45,8 +45,12 @@ func eval(instr int) {
 		pc++
 		// push args to stack
 		stack[sp] = program[pc]
-	default:
-		fmt.Println(instr)
+	case POP:
+		// tempVal - value that popped from top of the stack
+		tempVal := stack[sp]
+		// decrementing stack pointer
+		sp--
+		fmt.Printf("popped %d\n", tempVal)
 	}
 }
 
