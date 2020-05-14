@@ -228,18 +228,14 @@ func stackDump(depth int) {
 	fmt.Printf("==========================================\n")
 }
 
-func run() {
+func runFile(file string) {
+	program = tokenizer(readFile(file))
 	for running {
 		eval(fetch())
 		if !isJump {
 			pc++
 		}
 	}
-}
-
-func runFile(file string) {
-	program = tokenizer(readFile(file))
-	run()
 }
 
 func runPrompt() {
@@ -269,7 +265,12 @@ func runPrompt() {
 		} else {
 			// run <input>
 			program = append(program, tokenizer([]string{cleanString})[0])
-			run()
+			if running {
+				eval(fetch())
+				if !isJump {
+					pc++
+				}
+			}
 		}
 	}
 }
