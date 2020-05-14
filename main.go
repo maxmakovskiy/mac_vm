@@ -32,24 +32,21 @@ const (
 	NumOfRegisters
 )
 
+type Token struct {
+	command int
+	args    []int
+}
+
 var (
-	program []int = []int{
-		PSH, 5,
-		PSH, 6,
-		ADD,
-		POP,
-		JMP, 0,
-		PSH, 1,
-		PSH, 2,
-		MUL,
-		POP,
-		HLT,
-	}
+	program []Token
 
 	// running - flag that allows us to automate fetch cycle
 	running bool = true
 
-	stack [256]int
+	// if current instruction is jmp then don't need to increment pc
+	isJump bool
+
+	stack     [256]int
 	registers [NumOfRegisters]int
 
 	// sp - stack pointer
@@ -58,14 +55,15 @@ var (
 	pc = registers[PC]
 )
 
-
 // fetch - returns current instruction from program
-func fetch() int {
+func fetch() Token {
 	return program[pc]
 }
 
 // eval - evaluates the given instruction
 func eval(instr Token) {
+	isJump = false
+
 	switch instr.command {
 	case HLT:
 		running = false
@@ -96,13 +94,9 @@ func eval(instr Token) {
 		arg2 := stack[sp]
 		stack[sp] = arg1 * arg2
 	case JMP:
+		isJump = true
 		pc = instr.args[0]
 	}
-}
-
-type Token struct {
-	command int
-	args []int
 }
 
 func recognizeInstr(instr string) int {
@@ -175,12 +169,12 @@ func readFile(fileName string) []string {
 }
 
 func main() {
-	source := flag.String("file","","")
+	source := flag.String("file", "", "")
 
 	flag.Parse()
 	if *source == "" {
 		fmt.Fprintln(os.Stderr, "-flag=[file] required")
-		return
+//		return
 	}
 
 	// explicit assigning default values:
@@ -189,15 +183,13 @@ func main() {
 	registers[SP] = -1
 	registers[PC] = 0
 
-	var tokens []Token
-	tokens = tokenizer(readFile(*source))
+//	program = tokenizer(readFile(*source))
+	program = tokenizer(readFile("test.mac"))
 
-	for _, v := range tokens {
-		if running {
-			eval(v)
+	for running {
+		eval(fetch())
+		if !isJump {
 			pc++
-		} else {
-			break
 		}
 	}
 
