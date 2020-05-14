@@ -1,6 +1,12 @@
 package main
 
-import "fmt"
+import (
+	"bufio"
+	"fmt"
+	"os"
+	"strconv"
+	"strings"
+)
 
 // instruction set of this virtual machine
 // opcodes begins since 0
@@ -8,7 +14,7 @@ const (
 	PSH = iota
 	ADD
 	POP
-	SET
+	JMP
 	HLT
 	MUL
 )
@@ -31,6 +37,7 @@ var (
 		PSH, 6,
 		ADD,
 		POP,
+		JMP, 0,
 		PSH, 1,
 		PSH, 2,
 		MUL,
@@ -91,7 +98,86 @@ func eval(instr int) {
 		sp--
 		arg2 := stack[sp]
 		stack[sp] = arg1 * arg2
+	case JMP:
+		pc++
+		pc = pc+1
+		pc++
 	}
+}
+
+type Line struct {
+	command int
+	args []int
+}
+
+func recognizeInstr(instr string) int {
+	switch instr {
+	case "PSH":
+		return PSH
+	case "POP":
+		return POP
+	case "ADD":
+		return ADD
+	case "MUL":
+		return MUL
+	case "JMP":
+		return JMP
+	case "HLT":
+		return HLT
+	default:
+		return HLT
+	}
+}
+
+func tokenizer(input []string) []Line {
+	result := make([]Line, len(input))
+
+	for i := range input {
+		temp := strings.Split(input[i], " ")
+
+		line := Line{}
+
+		line.command = recognizeInstr(temp[0])
+
+		if len(temp) > 1 {
+			temp2 := temp[1:]
+			line.args = make([]int, len(temp2))
+
+			var err error
+			for i := range temp2 {
+				line.args[i], err = strconv.Atoi(temp2[i])
+				if err != nil {
+					fmt.Fprintln(os.Stderr, err)
+				}
+			}
+		}
+
+		result[i] = line
+	}
+
+
+	return result
+}
+
+func readFile(fileName string) []string {
+	result := make([]string, 0)
+
+	file, err := os.Open(fileName)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		result = append(result, strings.TrimSpace(scanner.Text()))
+	}
+
+	if err := scanner.Err(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+	}
+
+	return result
 }
 
 func main() {
@@ -100,6 +186,11 @@ func main() {
 	// registers[PC] = 0 'case execution of program begins from 0 address
 	registers[SP] = -1
 	registers[PC] = 0
+
+	var programz []Line
+	programz = tokenizer(readFile("test.mac"))
+	fmt.Println(programz)
+
 
 	for running {
 		eval(fetch())
