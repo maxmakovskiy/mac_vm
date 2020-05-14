@@ -21,6 +21,7 @@ const (
 	DIV
 	SUB
 	MOV
+	GLD
 )
 
 const (
@@ -113,6 +114,10 @@ func eval(instr Token) {
 		reg1 := instr.args[0]
 		reg2 := instr.args[1]
 		registers[reg1] = registers[reg2]
+	case GLD:
+		sp++
+		reg := instr.args[0]
+		stack[sp] = registers[reg]
 	}
 }
 
@@ -134,6 +139,8 @@ func recognizeInstr(instr string) int {
 		return SUB
 	case "MOV":
 		return MOV
+	case "GLD":
+		return GLD
 	default:
 		return HLT
 	}
