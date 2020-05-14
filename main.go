@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"flag"
 	"fmt"
 	"os"
 	"strconv"
@@ -202,23 +201,8 @@ func readFile(fileName string) []string {
 	return result
 }
 
-func main() {
-	source := flag.String("file", "", "")
-
-	flag.Parse()
-	if *source == "" {
-		fmt.Fprintln(os.Stderr, "-flag=[file] required")
-//		return
-	}
-
-	// explicit assigning default values:
-	// registers[SP] = -1 'cause execution stack is empty
-	// registers[PC] = 0 'case execution of program begins from 0 address
-	registers[SP] = -1
-	registers[PC] = 0
-
-//	program = tokenizer(readFile(*source))
-	program = tokenizer(readFile("test.mac"))
+func runFile(file string) {
+	program = tokenizer(readFile(file))
 
 	for running {
 		eval(fetch())
@@ -226,5 +210,32 @@ func main() {
 			pc++
 		}
 	}
+}
+
+func runPrompt() {
+	fmt.Println("runPrompt")
+}
+
+func main() {
+	// explicit assigning default values:
+	// registers[SP] = -1 'cause execution stack is empty
+	// registers[PC] = 0 'case execution of program begins from 0 address
+	registers[SP] = -1
+	registers[PC] = 0
+
+	var cmdArgs []string = os.Args[1:]
+	var argsLen int = len(cmdArgs)
+
+	if argsLen > 1 {
+		fmt.Println("Usage: vm.exe [script]")
+		os.Exit(64)
+	} else if argsLen == 1 {
+		runFile(cmdArgs[0])
+	} else {
+		runPrompt()
+	}
+
+
+
 
 }
