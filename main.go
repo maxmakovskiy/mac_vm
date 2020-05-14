@@ -42,6 +42,8 @@ type Token struct {
 }
 
 var (
+	version = 0.1
+
 	program []Token
 
 	// running - flag that allows us to automate fetch cycle
@@ -201,9 +203,32 @@ func readFile(fileName string) []string {
 	return result
 }
 
-func runFile(file string) {
-	program = tokenizer(readFile(file))
+func registerDump() {
+	fmt.Printf("REGISTER DUMP:\n")
+	fmt.Printf("------------------------------------------\n")
+	fmt.Printf("General purpose registers:\n")
+	fmt.Printf("Register[A] = %d;\tRegister[B] = %d;\n", registers[A], registers[B])
+	fmt.Printf("Register[C] = %d;\tRegister[D] = %d;\n", registers[C], registers[D])
+	fmt.Printf("Register[E] = %d;\tRegister[F] = %d;\n", registers[E], registers[F])
+	fmt.Printf("------------------------------------------\n")
+	fmt.Printf("Special purpose registers:\n")
+	fmt.Printf("Program Counter = %d;\nStack Pointer = %d;\n", pc, sp)
+	fmt.Printf("==========================================\n")
+}
 
+func stackDump(depth int) {
+	fmt.Printf("STACK DUMP:\n")
+	fmt.Printf("------------------------------------------\n")
+	for i, k := range stack {
+		if (i+1) > depth {
+			break
+		}
+		fmt.Printf(" -> %d\n", k)
+	}
+	fmt.Printf("==========================================\n")
+}
+
+func run() {
 	for running {
 		eval(fetch())
 		if !isJump {
@@ -212,8 +237,41 @@ func runFile(file string) {
 	}
 }
 
+func runFile(file string) {
+	program = tokenizer(readFile(file))
+	run()
+}
+
 func runPrompt() {
-	fmt.Println("runPrompt")
+	program = make([]Token, 0)
+
+	reader := bufio.NewReader(os.Stdin)
+
+	fmt.Printf("Mac VM (build %f)\n", version)
+	fmt.Printf("Type \"help\" for more information\n")
+
+	// interactive cycle
+	for {
+		fmt.Print(">>> ")
+
+		input, err := reader.ReadString('\n')
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+		}
+
+		cleanString := strings.Trim(input, "\r\n")
+		if cleanString == "" {
+			continue
+		} else if cleanString == "exit" {
+			break
+		} else if cleanString == "help" {
+			fmt.Println("Hello! It's help :D How are you?")
+		} else {
+			// run <input>
+			program = append(program, tokenizer([]string{cleanString})[0])
+			run()
+		}
+	}
 }
 
 func main() {
@@ -234,8 +292,4 @@ func main() {
 	} else {
 		runPrompt()
 	}
-
-
-
-
 }
