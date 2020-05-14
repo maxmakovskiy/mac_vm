@@ -24,6 +24,9 @@ var (
 	pc int = 0
 	// running - flag that allows us to automate fetch cycle
 	running bool = true
+	// sp - stack pointer
+	sp int = -1
+	stack [256]int
 )
 
 // fetch - returns current instruction from program
@@ -36,6 +39,12 @@ func eval(instr int) {
 	switch instr {
 	case HLT:
 		running = false
+	case PSH:
+		sp++
+		// incr pc for give args of PSH instruction
+		pc++
+		// push args to stack
+		stack[sp] = program[pc]
 	default:
 		fmt.Println(instr)
 	}
