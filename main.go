@@ -118,6 +118,14 @@ func eval(instr Token) {
 	case GPT:
 		reg := instr.args[0]
 		registers[reg] = stack.Top()
+	case IF:
+		isJump = true
+		reg := instr.args[0]
+		val := instr.args[1]
+		addr := instr.args[2]
+		if registers[reg] == val {
+			pc = addr
+		}
 	case -1:
 		return
 	}
