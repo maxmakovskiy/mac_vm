@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"log"
 	"regexp"
 	"strconv"
 	"strings"
@@ -23,6 +24,8 @@ const (
 	MOV
 	GLD
 	GPT
+	IF
+	IFN
 )
 
 const (
@@ -56,7 +59,6 @@ var (
 	registers [NumOfRegisters]int
 
 	// sp - stack pointer
-//	sp = stack.Length()
 	// pc - program counter or instruction pointer
 	pc = 0
 )
@@ -144,6 +146,10 @@ func recognizeInstr(instr string) int {
 		return GLD
 	case "GPT":
 		return GPT
+	case "IF":
+		return IF
+	case "IFN":
+		return IFN
 	case "HLT":
 		return HLT
 	default:
@@ -190,12 +196,25 @@ func tokenizer(input []string) []Token {
 			} else if token.command == MOV {
 				token.args[0] = recognizeRegister(arguments[0])
 				token.args[1] = recognizeRegister(arguments[1])
+			} else if token.command == IF || token.command == IFN{
+				token.args[0] = recognizeRegister(arguments[0])
+
+				var err error
+				token.args[1], err = strconv.Atoi(arguments[1])
+				if err != nil {
+					log.Fatal(err)
+				}
+				token.args[2], err = strconv.Atoi(arguments[2])
+				if err != nil {
+					log.Fatal(err)
+				}
+
 			} else {
 				var err error
 				for i := range arguments {
 					token.args[i], err = strconv.Atoi(arguments[i])
 					if err != nil {
-						fmt.Fprintln(os.Stderr, err)
+						log.Fatal(err)
 					}
 				}
 			}
@@ -213,7 +232,7 @@ func readFile(fileName string) []string {
 
 	file, err := os.Open(fileName)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		log.Fatal(err)
 	}
 	defer file.Close()
 
@@ -223,7 +242,7 @@ func readFile(fileName string) []string {
 	}
 
 	if err := scanner.Err(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		log.Fatal(err)
 	}
 
 	return result
@@ -232,17 +251,17 @@ func readFile(fileName string) []string {
 // help - prints help info about each instruction for MacVM
 func help() {
 	fmt.Printf("The commands are: \n")
-	fmt.Printf("PSH <v> - pushes <v> value to the stack\n")
-	fmt.Printf("POP - pops value from the stack\n")
-	fmt.Printf("ADD - adds top two values on stack\n")
-	fmt.Printf("SUB - subtracts top two values on stack\n")
-	fmt.Printf("DIV - divides top tow values on stack\n")
-	fmt.Printf("MUL - multiplies top two values on stack\n")
+	fmt.Printf("PSH <v>       - pushes <v> value to the stack\n")
+	fmt.Printf("POP           - pops value from the stack\n")
+	fmt.Printf("ADD           - adds top two values on stack\n")
+	fmt.Printf("SUB           - subtracts top two values on stack\n")
+	fmt.Printf("DIV           - divides top tow values on stack\n")
+	fmt.Printf("MUL           - multiplies top two values on stack\n")
 	fmt.Printf("MOV <R1> <R2> - move the value from <R2> register to <R1> register\n")
-	fmt.Printf("JMP <addr> - jump to the <addr> address\n")
-	fmt.Printf("GLD <R> - loads <R> register to the top of stack\n")
-	fmt.Printf("GPT <R> - loads top of the stack to <R> register\n")
-	fmt.Printf("HLT - halts program\n")
+	fmt.Printf("JMP <addr>    - jump to the <addr> address\n")
+	fmt.Printf("GLD <R>       - loads <R> register to the top of stack\n")
+	fmt.Printf("GPT <R>       - loads top of the stack to <R> register\n")
+	fmt.Printf("HLT           - halts program\n")
 }
 
 // registerDump - prints current state of all registers for MacVM
@@ -312,7 +331,7 @@ func runPrompt() {
 
 		input, err := reader.ReadString('\n')
 		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
+			log.Fatal(err)
 		}
 
 		cleanString := strings.Trim(input, "\r\n")
@@ -328,12 +347,12 @@ func runPrompt() {
 		} else {
 			matched, err := regexp.MatchString("stack -*[0-9]+", cleanString)
 			if err != nil {
-				fmt.Fprintln(os.Stderr, err)
+				log.Fatal(err)
 			}
 			if matched {
 				num, err := strconv.Atoi(cleanString[6:])
 				if err != nil {
-					fmt.Fprintln(os.Stderr, err)
+					log.Fatal(err)
 				}
 
 				stackDump(num)
