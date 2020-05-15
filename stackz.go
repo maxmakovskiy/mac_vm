@@ -15,6 +15,11 @@ func NewStack() Stack {
 	return Stack{}
 }
 
+// Top returns value of current top element
+func (s *Stack) Top() int {
+	return s.top.value
+}
+
 // Length returns current size of stack
 func (s *Stack) Length() int {
 	return (*s).size

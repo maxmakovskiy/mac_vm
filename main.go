@@ -101,12 +101,13 @@ func eval(instr Token) {
 		reg1 := instr.args[0]
 		reg2 := instr.args[1]
 		registers[reg1] = registers[reg2]
+		registers[reg2] = 0
 	case GLD:
 		reg := instr.args[0]
 		stack.Push(registers[reg])
 	case GPT:
 		reg := instr.args[0]
-		registers[reg] = stack.Pop()
+		registers[reg] = stack.Top()
 	case -1:
 		return
 	}
@@ -223,16 +224,16 @@ func readFile(fileName string) []string {
 // help - prints help info about each instruction for MacVM
 func help() {
 	fmt.Printf("The commands are: \n")
-	fmt.Printf("PSH - pushes value to the stack\n")
+	fmt.Printf("PSH <v> - pushes <v> value to the stack\n")
 	fmt.Printf("POP - pops value from the stack\n")
 	fmt.Printf("ADD - adds top two values on stack\n")
 	fmt.Printf("SUB - subtracts top two values on stack\n")
 	fmt.Printf("DIV - divides top tow values on stack\n")
 	fmt.Printf("MUL - multiplies top two values on stack\n")
-	fmt.Printf("MOV - move the value from one register to another\n")
-	fmt.Printf("JMP - jump to the passing address\n")
-	fmt.Printf("GLD - loads given register to the top of stack\n")
-	fmt.Printf("GPT - pushes top of the stack to given register\n")
+	fmt.Printf("MOV <R1> <R2> - move the value from <R2> register to <R1> register\n")
+	fmt.Printf("JMP <addr> - jump to the <addr> address\n")
+	fmt.Printf("GLD <R> - loads <R> register to the top of stack\n")
+	fmt.Printf("GPT <R> - loads top of the stack to <R> register\n")
 	fmt.Printf("HLT - halts program\n")
 }
 
