@@ -42,11 +42,12 @@ type Token struct {
 
 var (
 	version = 0.1
+	overflow = 256
 
 	program []Token
 
 	// running - flag that allows us to automate fetch cycle
-	running bool = true
+	running = true
 
 	// if current instruction is jmp then don't need to increment pc
 	isJump bool
@@ -68,6 +69,13 @@ func fetch() Token {
 // eval - evaluates the given instruction
 func eval(instr Token) {
 	isJump = false
+
+	// if stack is out of established boundaries
+	if stack.Length() > overflow {
+		fmt.Printf("Stack Overflow!\n")
+		running = false
+		return
+	}
 
 	switch instr.command {
 	case HLT:
@@ -136,7 +144,7 @@ func recognizeInstr(instr string) int {
 		return GLD
 	case "GPT":
 		return GPT
-	case "HTL":
+	case "HLT":
 		return HLT
 	default:
 		return -1
