@@ -53,11 +53,13 @@ var (
 	// if current instruction is jmp then don't need to increment pc
 	isJump bool
 
-	stack     [256]int
+	// TODO:
+	// - change array-based stack to custom stack
+	stack = NewStack()
 	registers [NumOfRegisters]int
 
 	// sp - stack pointer
-	sp = -1
+//	sp = stack.Length()
 	// pc - program counter or instruction pointer
 	pc = 0
 )
@@ -75,60 +77,46 @@ func eval(instr Token) {
 	case HLT:
 		running = false
 	case PSH:
-		sp++
-		stack[sp] = instr.args[0]
+		stack.Push(instr.args[0])
 	case POP:
 		// tempVal - value that popped from top of the stack
-		tempVal := stack[sp]
-		// decrementing stack pointer
-		sp--
+		tempVal := stack.Pop()
 		fmt.Printf("popped %d\n", tempVal)
 	case ADD:
-		// pop first value from the stack
-		// and decrementing stack pointer
-		arg1 := stack[sp]
-		sp--
-		// pop next value from the stack
-		arg2 := stack[sp]
-		// theoretically, we need to do
-		// sp-- decrementing sp after popped the second value from the stack
-		// sp++ incrementing sp for push result of arg1+arg2
-		// but (sp--) + (sp++) = 0 and we just stay it out
-		stack[sp] = arg1 + arg2
+		arg1 := stack.Pop().(int)
+		arg2 := stack.Pop().(int)
+		stack.Push(arg1 + arg2)
 	case MUL:
-		arg1 := stack[sp]
-		sp--
-		arg2 := stack[sp]
-		stack[sp] = arg1 * arg2
+		arg1 := stack.Pop().(int)
+		arg2 := stack.Pop().(int)
+		stack.Push(arg1 * arg2)
 	case JMP:
 		isJump = true
 		pc = instr.args[0]
 	case DIV:
-		arg1 := stack[sp]
-		sp--
-		arg2 := stack[sp]
-		stack[sp] = arg1 / arg2
+		arg1 := stack.Pop().(int)
+		arg2 := stack.Pop().(int)
+		stack.Push(arg1 / arg2)
 	case SUB:
-		arg1 := stack[sp]
-		sp--
-		arg2 := stack[sp]
-		stack[sp] = arg1 - arg2
+		arg1 := stack.Pop().(int)
+		arg2 := stack.Pop().(int)
+		stack.Push(arg1 - arg2)
 	case MOV:
 		reg1 := instr.args[0]
 		reg2 := instr.args[1]
 		registers[reg1] = registers[reg2]
 	case GLD:
-		sp++
 		reg := instr.args[0]
-		stack[sp] = registers[reg]
+		stack.Push(registers[reg])
 	case GPT:
 		reg := instr.args[0]
-		registers[reg] = stack[sp]
+		registers[reg] = stack.Pop().(int)
 	case -1:
 		return
 	}
 }
 
+// recognizeInstr - returns opcode for given string representation of instruction
 func recognizeInstr(instr string) int {
 	switch instr {
 	case "PSH":
@@ -158,6 +146,7 @@ func recognizeInstr(instr string) int {
 	}
 }
 
+// tokenizer - returns slice of Tokens for given input slice of strings
 func tokenizer(input []string) []Token {
 	result := make([]Token, len(input))
 
@@ -187,6 +176,7 @@ func tokenizer(input []string) []Token {
 	return result
 }
 
+// readFile - returns slice of strings populated by lines from file
 func readFile(fileName string) []string {
 	result := make([]string, 0)
 
@@ -208,6 +198,7 @@ func readFile(fileName string) []string {
 	return result
 }
 
+// help - prints help info about each instruction for MacVM
 func help() {
 	fmt.Printf("The commands are: \n")
 	fmt.Printf("PSH - pushes value to the stack\n")
@@ -223,6 +214,7 @@ func help() {
 	fmt.Printf("HLT - halts program\n")
 }
 
+// registerDump - prints current state of all registers for MacVM
 func registerDump() {
 	fmt.Printf("REGISTER DUMP:\n")
 	fmt.Printf("------------------------------------------\n")
@@ -232,28 +224,34 @@ func registerDump() {
 	fmt.Printf("Register[E] = %d;\tRegister[F] = %d;\n", registers[E], registers[F])
 	fmt.Printf("------------------------------------------\n")
 	fmt.Printf("Special purpose registers:\n")
-	fmt.Printf("Program Counter = %d;\nStack Pointer = %d;\n", pc, sp)
+	fmt.Printf("Program Counter = %d;\nStack Pointer = %d;\n", pc, stack.Length())
 	fmt.Printf("==========================================\n")
 }
 
+// stackDump - prints current state of execution stack with given depth
+// if depth equals -1 then stackDump prints all elements from stack
 func stackDump(depth int) {
 	fmt.Printf("STACK DUMP:\n")
 	fmt.Printf("------------------------------------------\n")
-	if depth == -1 {
-		for _, k := range stack {
-			fmt.Printf(" -> %d\n", k)
+	tstack := stack.ToSlice()
+	if stack.Length() == 0 {
+		fmt.Printf("Stack is empty!\n")
+	} else if depth == -1 || depth >= stack.Length() {
+		for _, k := range tstack {
+			fmt.Printf(" -> %d\n", k.(int))
 		}
 	} else {
-		for i, k := range stack {
-			if (i+1) > depth {
+		for i, k := range tstack {
+			if (i + 1) > depth {
 				break
 			}
-			fmt.Printf(" -> %d\n", k)
+			fmt.Printf(" -> %d\n", k.(int))
 		}
 	}
 	fmt.Printf("==========================================\n")
 }
 
+// runFile - runs execution from given file
 func runFile(file string) {
 	program = tokenizer(readFile(file))
 	for running {
@@ -264,6 +262,7 @@ func runFile(file string) {
 	}
 }
 
+// funPrompt - runs execution by interactive mode
 func runPrompt() {
 	program = make([]Token, 0)
 
