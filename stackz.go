@@ -1,9 +1,7 @@
 package main
 
 type item struct {
-	// Zero interface may hold
-	// value of any type
-	value interface{}
+	value int
 	next  *item
 }
 
@@ -23,7 +21,7 @@ func (s *Stack) Length() int {
 }
 
 // Push adds new value to the top of stack
-func (s *Stack) Push(v interface{}) {
+func (s *Stack) Push(v int) {
 	// initialize new item
 	// and add it to top of stack
 	(*s).top = &item{
@@ -36,25 +34,20 @@ func (s *Stack) Push(v interface{}) {
 }
 
 // Pop pops the top value from the stack
-func (s *Stack) Pop() interface{} {
-	if (*s).size > 0 {
-		// get value from top element
-		val := (*s).top.value
-		// make top element next element
-		(*s).top = (*s).top.next
-		// decrease size
-		(*s).size--
+func (s *Stack) Pop() int {
+	// get value from top element
+	val := (*s).top.value
+	// make top element next element
+	(*s).top = (*s).top.next
+	// decrease size
+	(*s).size--
 
-		return val
-	}
-
-	// if size of stack equals zero
-	return nil
+	return val
 }
 
 // ToSlice - converts current contents of stack to the slice
-func (s *Stack) ToSlice() []interface{} {
-	result := make([]interface{}, 0)
+func (s *Stack) ToSlice() []int {
+	result := make([]int, 0)
 	iter := s.top
 
 	for iter != nil {

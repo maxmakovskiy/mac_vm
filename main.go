@@ -83,23 +83,23 @@ func eval(instr Token) {
 		tempVal := stack.Pop()
 		fmt.Printf("popped %d\n", tempVal)
 	case ADD:
-		arg1 := stack.Pop().(int)
-		arg2 := stack.Pop().(int)
+		arg1 := stack.Pop()
+		arg2 := stack.Pop()
 		stack.Push(arg1 + arg2)
 	case MUL:
-		arg1 := stack.Pop().(int)
-		arg2 := stack.Pop().(int)
+		arg1 := stack.Pop()
+		arg2 := stack.Pop()
 		stack.Push(arg1 * arg2)
 	case JMP:
 		isJump = true
 		pc = instr.args[0]
 	case DIV:
-		arg1 := stack.Pop().(int)
-		arg2 := stack.Pop().(int)
+		arg1 := stack.Pop()
+		arg2 := stack.Pop()
 		stack.Push(arg1 / arg2)
 	case SUB:
-		arg1 := stack.Pop().(int)
-		arg2 := stack.Pop().(int)
+		arg1 := stack.Pop()
+		arg2 := stack.Pop()
 		stack.Push(arg1 - arg2)
 	case MOV:
 		reg1 := instr.args[0]
@@ -110,7 +110,7 @@ func eval(instr Token) {
 		stack.Push(registers[reg])
 	case GPT:
 		reg := instr.args[0]
-		registers[reg] = stack.Pop().(int)
+		registers[reg] = stack.Pop()
 	case -1:
 		return
 	}
@@ -224,8 +224,19 @@ func registerDump() {
 	fmt.Printf("Register[E] = %d;\tRegister[F] = %d;\n", registers[E], registers[F])
 	fmt.Printf("------------------------------------------\n")
 	fmt.Printf("Special purpose registers:\n")
-	fmt.Printf("Program Counter = %d;\nStack Pointer = %d;\n", pc, stack.Length())
+	fmt.Printf("Program Counter = %d;\nStack Pointer = 0x%X;\n", pc, stack.Length())
 	fmt.Printf("==========================================\n")
+}
+
+func printStack(slice []int) {
+	fmt.Printf("Stack Pointer = 0x%X\n", stack.Length())
+	for i, k := range slice {
+		if i == 0 {
+			fmt.Printf(" -> %d\n", k)
+			continue
+		}
+		fmt.Printf("    %d\n", k)
+	}
 }
 
 // stackDump - prints current state of execution stack with given depth
@@ -237,16 +248,9 @@ func stackDump(depth int) {
 	if stack.Length() == 0 {
 		fmt.Printf("Stack is empty!\n")
 	} else if depth == -1 || depth >= stack.Length() {
-		for _, k := range tstack {
-			fmt.Printf(" -> %d\n", k.(int))
-		}
+		printStack(tstack)
 	} else {
-		for i, k := range tstack {
-			if (i + 1) > depth {
-				break
-			}
-			fmt.Printf(" -> %d\n", k.(int))
-		}
+		printStack(tstack[:depth+1])
 	}
 	fmt.Printf("==========================================\n")
 }
@@ -268,7 +272,7 @@ func runPrompt() {
 
 	reader := bufio.NewReader(os.Stdin)
 
-	fmt.Printf("Mac VM (build %f)\n", version)
+	fmt.Printf("MacVM (build %.2f)\n", version)
 	fmt.Printf("Type \"help\" for more information\n")
 
 	// interactive cycle
