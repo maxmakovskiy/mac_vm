@@ -32,8 +32,6 @@ const (
 	D
 	E
 	F
-	PC
-	SP
 	NumOfRegisters
 )
 
@@ -53,8 +51,6 @@ var (
 	// if current instruction is jmp then don't need to increment pc
 	isJump bool
 
-	// TODO:
-	// - change array-based stack to custom stack
 	stack = NewStack()
 	registers [NumOfRegisters]int
 
@@ -146,6 +142,25 @@ func recognizeInstr(instr string) int {
 	}
 }
 
+func recognizeRegister(register string) int {
+	switch register	{
+	case "A":
+		return A
+	case "B":
+		return B
+	case "C":
+		return C
+	case "D":
+		return D
+	case "E":
+		return E
+	case "F":
+		return F
+	default:
+		return -1
+	}
+}
+
 // tokenizer - returns slice of Tokens for given input slice of strings
 func tokenizer(input []string) []Token {
 	result := make([]Token, len(input))
@@ -158,14 +173,21 @@ func tokenizer(input []string) []Token {
 		token.command = recognizeInstr(temp[0])
 
 		if len(temp) > 1 {
-			temp2 := temp[1:]
-			token.args = make([]int, len(temp2))
+			arguments := temp[1:]
+			token.args = make([]int, len(arguments))
 
-			var err error
-			for i := range temp2 {
-				token.args[i], err = strconv.Atoi(temp2[i])
-				if err != nil {
-					fmt.Fprintln(os.Stderr, err)
+			if token.command == GPT || token.command == GLD {
+				token.args[0] = recognizeRegister(arguments[0])
+			} else if token.command == MOV {
+				token.args[0] = recognizeRegister(arguments[0])
+				token.args[1] = recognizeRegister(arguments[1])
+			} else {
+				var err error
+				for i := range arguments {
+					token.args[i], err = strconv.Atoi(arguments[i])
+					if err != nil {
+						fmt.Fprintln(os.Stderr, err)
+					}
 				}
 			}
 		}
