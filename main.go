@@ -3,12 +3,17 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"os"
 	"log"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
 )
+
+// TODO:
+// - update help with IF and IFN
+// - add IN and OUT instruction
+// - (maybe) add IR (input register) and OR (output register) registers
 
 // instruction set of this virtual machine
 // opcodes begins since 0
@@ -44,7 +49,7 @@ type Token struct {
 }
 
 var (
-	version = 0.1
+	version  = 0.1
 	overflow = 256
 
 	program []Token
@@ -55,7 +60,7 @@ var (
 	// if current instruction is jmp then don't need to increment pc
 	isJump bool
 
-	stack = NewStack()
+	stack     = NewStack()
 	registers [NumOfRegisters]int
 
 	// sp - stack pointer
@@ -119,19 +124,19 @@ func eval(instr Token) {
 		reg := instr.args[0]
 		registers[reg] = stack.Top()
 	case IF:
-		isJump = true
 		reg := instr.args[0]
 		val := instr.args[1]
 		addr := instr.args[2]
 		if registers[reg] == val {
+			isJump = true
 			pc = addr
 		}
 	case IFN:
-		isJump = true
 		reg := instr.args[0]
 		val := instr.args[1]
 		addr := instr.args[2]
 		if registers[reg] != val {
+			isJump = true
 			pc = addr
 		}
 	case -1:
@@ -174,7 +179,7 @@ func recognizeInstr(instr string) int {
 }
 
 func recognizeRegister(register string) int {
-	switch register	{
+	switch register {
 	case "A":
 		return A
 	case "B":
@@ -212,7 +217,7 @@ func tokenizer(input []string) []Token {
 			} else if token.command == MOV {
 				token.args[0] = recognizeRegister(arguments[0])
 				token.args[1] = recognizeRegister(arguments[1])
-			} else if token.command == IF || token.command == IFN{
+			} else if token.command == IF || token.command == IFN {
 				token.args[0] = recognizeRegister(arguments[0])
 
 				var err error
